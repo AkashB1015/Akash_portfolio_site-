@@ -1,0 +1,374 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Theme Variables Setup */
+@layer base {
+  :root {
+    /* Premium Light Theme space-separated RGB values (Cool Slate-Blue Light Mode) */
+    --color-base-950: 244 246 250;
+    /* #F4F6FA */
+    --color-base-900: 255 255 255;
+    /* #FFFFFF */
+    --color-base-800: 226 232 240;
+    /* #E2E8F0 */
+    --color-line: 226 232 240;
+    /* #E2E8F0 */
+    --color-ink-100: 15 23 42;
+    /* #0F172A */
+    --color-ink-400: 71 85 105;
+    /* #475569 */
+    --color-accent-ember: 59 130 246;
+    /* #3B82F6 (Primary Electric Blue) */
+    --color-accent-gold: 56 189 248;
+    /* #38BDF8 (Primary Cyan) */
+    --color-accent-teal: 139 92 246;
+    /* #8B5CF6 (Secondary Purple) */
+  }
+
+  html.dark {
+    /* Premium Navy-Black Theme space-separated RGB values (Dark Mode) */
+    --color-base-950: 8 8 16;
+    /* #080810 */
+    --color-base-900: 15 20 32;
+    /* #0F1420 */
+    --color-base-800: 30 36 51;
+    /* #1E2433 */
+    --color-line: 30 36 51;
+    /* #1E2433 */
+    --color-ink-100: 245 245 247;
+    /* #F5F5F7 */
+    --color-ink-400: 156 163 175;
+    /* #9CA3AF */
+    --color-accent-ember: 59 130 246;
+    /* #3B82F6 */
+    --color-accent-gold: 56 189 248;
+    /* #38BDF8 */
+    --color-accent-teal: 139 92 246;
+    /* #8B5CF6 */
+  }
+
+  body {
+    background-color: rgb(var(--color-base-950));
+    color: rgb(var(--color-ink-100));
+    font-family: 'Inter', sans-serif;
+    transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Poppins', 'Inter', sans-serif;
+  }
+
+  /* Smooth color/bg transitions globally */
+  main,
+  section,
+  div,
+  header,
+  nav,
+  footer,
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--color-base-950));
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.4);
+}
+
+/* Lenis Smooth Scroll Configuration */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* Noise overlay disabled for smooth premium feel */
+.noise-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  content: "";
+  opacity: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* Lighter noise overlay in light theme */
+html:not(.dark) .noise-overlay {
+  opacity: 0;
+}
+
+/* Grid overlay background linked to custom colors */
+.grid-bg {
+  background-size: 40px 40px;
+  background-image: linear-gradient(to right, rgba(var(--color-line), 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(var(--color-line), 0.15) 1px, transparent 1px);
+}
+
+/* Hide standard scrollbar but keep functionality if needed */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Glow Accent Highlight Utilities */
+.glow-effect {
+  position: relative;
+}
+
+.glow-effect::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 15px rgba(var(--color-accent-ember), 0.15);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.glow-effect:hover::after {
+  opacity: 1;
+}
+
+/* Card 3D Flip Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+/* Underline draw animation for hero */
+.draw-underline {
+  stroke-dasharray: 500;
+  stroke-dashoffset: 500;
+  animation: draw 1.5s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+  animation-delay: 1.2s;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Ember text shadow glowing animation loop */
+@keyframes glowPulse {
+
+  0%,
+  100% {
+    text-shadow: 0 0 4px rgba(var(--color-accent-ember), 0.1);
+  }
+
+  50% {
+    text-shadow: 0 0 16px rgba(var(--color-accent-ember), 0.6), 0 0 24px rgba(var(--color-accent-ember), 0.2);
+  }
+}
+
+.glow-pulse {
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+/* Timeline flow pulse animation */
+@keyframes travelingPulse {
+  0% {
+    top: -20%;
+  }
+
+  100% {
+    top: 120%;
+  }
+}
+
+.timeline-pulse {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  background: linear-gradient(to bottom, transparent, rgba(var(--color-accent-ember), 0.8), transparent);
+  animation: travelingPulse 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-delay: 1.5s;
+}
+
+/* Custom Redesign Classes */
+.top-gradient-border {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, #3B82F6, #8B5CF6, transparent);
+  z-index: 100;
+  pointer-events: none;
+}
+
+.radial-glow-tr {
+  position: fixed;
+  top: -20vh;
+  right: -20vw;
+  width: 75vw;
+  height: 75vh;
+  background: radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.28) 0%, rgba(139, 92, 246, 0.12) 50%, transparent 80%);
+  filter: blur(130px);
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+.radial-glow-bl {
+  position: fixed;
+  bottom: -20vh;
+  left: -20vw;
+  width: 75vw;
+  height: 75vh;
+  background:
+    radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.32) 0%, transparent 65%),
+    radial-gradient(circle at 30% 60%, rgba(59, 130, 246, 0.22) 0%, transparent 70%);
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Shimmer Sweep Animation for Gradient Text */
+@keyframes shimmerSweep {
+  0% {
+    background-position: -150% center;
+  }
+
+  100% {
+    background-position: 150% center;
+  }
+}
+
+.shimmer-sweep {
+  background-size: 200% auto !important;
+  animation: shimmerSweep 4.5s ease-in-out infinite;
+}
+
+/* Floating Particles Animation */
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 0.25;
+  }
+
+  85% {
+    opacity: 0.25;
+  }
+
+  100% {
+    transform: translateY(-200px) scale(0.6);
+    opacity: 0;
+  }
+}
+
+.animate-float {
+  animation: floatUp linear infinite;
+}
+
+/* Let's Talk Button Pulsing Glow */
+@keyframes pulseGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2), 0 0 0 0px rgba(59, 130, 246, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 4px 22px rgba(56, 189, 248, 0.55), 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3.5s ease-in-out infinite;
+}
+
+/* Chatbot Typing Indicator Dots Bouncing */
+@keyframes typingDotBounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+.animate-typing-dot {
+  animation: typingDotBounce 1.4s infinite ease-in-out;
+}
+
+.animate-typing-dot-delay-1 {
+  animation-delay: 0.2s;
+}
+
+.animate-typing-dot-delay-2 {
+  animation-delay: 0.4s;
+}
