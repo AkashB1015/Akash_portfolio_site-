@@ -33,7 +33,7 @@ Which project would you like to know more about?`,
 • **Tech:** React.js, Spring Boot (Java), ASP.NET Core (C#), MySQL, Razorpay, Google Maps API, JWT.
 • **Highlight:** Dual backend architecture running microservices in both Java and C#.
 • **Security:** Role-Based Access Control (RBAC) across Client, Provider, and Admin portals.
-• **GitHub:** [RoadRescue Repository](https://github.com/AkashB1015/RoadRescue)`,
+• **GitHub:** [RoadRescue Repository](https://github.com/AkashB1015/RoadRescue-Smart-Services-Platform.git)`,
     quickReplies: ["Think-X Info", "Cookify Info", "View Projects", "Contact Info"]
   },
   "project-thinkx": {
@@ -42,7 +42,7 @@ Which project would you like to know more about?`,
 • **Core:** Real-time assessment engine with automated timers, scoring, and detailed metrics.
 • **Tech:** MongoDB, Express.js, React.js, Node.js, MySQL, JWT.
 • **Highlight:** Polyglot support (MySQL and MongoDB models) with a custom admin portal for quiz creation.
-• **GitHub:** [Think-X Repository](https://github.com/AkashB1015/Think-X)`,
+• **GitHub:** [Think-X Repository](https://github.com/AkashB1015/Think-X-Quiz-Application-.git)`,
     quickReplies: ["RoadRescue Info", "Cookify Info", "View Projects", "Contact Info"]
   },
   "project-cookify": {
@@ -51,7 +51,7 @@ Which project would you like to know more about?`,
 • **Core:** Custom storefront checkout pipeline with polyglot database persistence.
 • **Tech:** React.js, Bootstrap, Spring Boot, Spring Data JPA, MongoDB, JWT.
 • **Highlight:** Uses SQL/JPA for transactional orders and MongoDB for catalog/raw inventories.
-• **GitHub:** [Cookify Repository](https://github.com/AkashB1015/Cookify)`,
+• **GitHub:** [Cookify Repository](https://github.com/AkashB1015/cookify-react-springboot-application.git)`,
     quickReplies: ["RoadRescue Info", "Think-X Info", "View Projects", "Contact Info"]
   },
   education: {

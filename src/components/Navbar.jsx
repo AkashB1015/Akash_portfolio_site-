@@ -43,7 +43,7 @@ export default function Navbar() {
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
-      
+
       // Force active section to contact if scrolled to the bottom of the page
       const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
       if (isAtBottom) {
@@ -145,20 +145,22 @@ export default function Navbar() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className={`fixed top-0 left-0 w-full z-50 border-b transition-all duration-500 ${scrolled
-            ? "bg-base-900/80 backdrop-blur-md border-line/60 py-3 shadow-[0_4px_20px_rgba(8,8,16,0.15)]"
-            : "bg-transparent border-transparent py-5"
+          ? "bg-base-900/80 backdrop-blur-md border-line/60 py-3 shadow-[0_4px_20px_rgba(8,8,16,0.15)]"
+          : "bg-transparent border-transparent py-5"
           }`}
       >
         <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
-          {/* Logo */}
-          <a
+          <motion.a
             href="#hero"
             onClick={(e) => handleNavClick(e, "hero")}
             className="font-display font-bold text-lg md:text-xl tracking-tight text-ink-100 flex items-center gap-1.5"
+            initial={{ scale: 1.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 110, damping: 13, delay: 0.1 }}
           >
             <span className="text-accent-blue font-extrabold">AKASH</span>
             <span className="font-light text-ink-400">BHADANE</span>
-          </a>
+          </motion.a>
 
           {/* Desktop Nav Items */}
           <div className="hidden md:flex items-center gap-1 bg-base-900/60 border border-line/50 px-1.5 py-1 rounded-full backdrop-blur-sm shadow-[inset_0_1px_8px_rgba(59,130,246,0.05)]">
