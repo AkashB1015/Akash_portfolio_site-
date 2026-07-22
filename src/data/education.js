@@ -15,7 +15,7 @@ export const education = [
     institution: "Sandip University",
     location: "Nashik, MH",
     duration: "2021 – 2025",
-    grade: "CGPA: 7.99 (First Division)",
+    grade: "CGPA: 8.0 (First Division)",
     current: false,
     details: "Acquired core computer science fundamentals including Data Structures & Algorithms, Object-Oriented Programming (C++/Java), Database Management Systems, Operating Systems, and Software Engineering."
   }

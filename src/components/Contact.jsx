@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { motion, AnimatePresence, useInView, useScroll, useTransform } from "framer-motion";
 import { fadeUp, staggerContainer, blurReveal } from "../utils/motionVariants";
 import { TypewriterLabel } from "./TextReveal";
 import { Mail, Phone, MapPin, Copy, Check } from "lucide-react";
@@ -44,6 +44,7 @@ function Linkedin({ size = 16, className }) {
 
 
 export default function Contact() {
+  const sectionRef = useRef(null);
   const [copied, setCopied] = useState(false);
   const labelRef = useRef(null);
   const labelInView = useInView(labelRef, { once: false, margin: "-100px" });
@@ -54,12 +55,43 @@ export default function Contact() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Scroll-linked drift for ambient background glows
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"]
+  });
+
+  const glowVioletX = useTransform(scrollYProgress, [0, 1], [-20, 15]);
+  const glowVioletY = useTransform(scrollYProgress, [0, 1], [-10, 20]);
+  const glowAmberX  = useTransform(scrollYProgress, [0, 1], [25, -20]);
+  const glowAmberY  = useTransform(scrollYProgress, [0, 1], [10, -25]);
+  const glowTealX   = useTransform(scrollYProgress, [0, 1], [-15, 20]);
+  const glowTealY   = useTransform(scrollYProgress, [0, 1], [20, -15]);
+
   return (
     <section 
+      ref={sectionRef}
       id="contact" 
-      className="py-24 md:py-36 border-t border-line bg-base-900/10 px-6 md:px-12 grid-bg relative"
+      className="py-24 md:py-36 border-t border-line bg-base-900/10 px-6 md:px-12 grid-bg relative overflow-hidden"
     >
-      <div className="max-w-7xl mx-auto flex flex-col justify-between min-h-[50vh]">
+      {/* Ambient background glows: three-color blend as the closing resolution moment */}
+      {/* Violet blob */}
+      <motion.div 
+        style={{ x: glowVioletX, y: glowVioletY }}
+        className="glow-ambient glow-violet absolute -left-20 top-10 w-[400px] h-[400px] opacity-100"
+      />
+      {/* Amber blob */}
+      <motion.div 
+        style={{ x: glowAmberX, y: glowAmberY }}
+        className="glow-ambient glow-amber absolute -right-20 bottom-10 w-[400px] h-[400px] opacity-100"
+      />
+      {/* Teal blob */}
+      <motion.div 
+        style={{ x: glowTealX, y: glowTealY }}
+        className="glow-ambient glow-teal absolute left-1/3 top-1/4 w-[450px] h-[450px] opacity-100"
+      />
+
+      <div className="max-w-7xl mx-auto flex flex-col justify-between min-h-[50vh] relative z-10">
         
         {/* Contact content grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start w-full">

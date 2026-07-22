@@ -158,7 +158,7 @@ export default function Hero() {
           <div
             className={`flex whitespace-nowrap gap-12 text-ink-400 font-sans text-[11px] tracking-widest font-semibold uppercase hover:[animation-play-state:paused] cursor-default ${prefersReduced ? "animate-none" : "animate-scroll-marquee"
               }`}
-            style={{ 
+            style={{
               willChange: prefersReduced ? "auto" : "transform",
               display: "flex",
               width: "max-content"

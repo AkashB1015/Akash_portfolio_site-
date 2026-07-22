@@ -4,10 +4,10 @@ import { Menu, X, Sun, Moon } from "lucide-react";
 
 const NAV_ITEMS = [
   { label: "About", target: "about" },
-  { label: "Skills", target: "skills" },
-  { label: "Projects", target: "projects" },
-  { label: "Certifications", target: "certifications" },
   { label: "Education", target: "education" },
+  { label: "Projects", target: "projects" },
+  { label: "Skills", target: "skills" },
+  { label: "Certifications", target: "certifications" },
   { label: "Contact", target: "contact" }
 ];
 

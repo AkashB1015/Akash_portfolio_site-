@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { certifications } from "../data/certifications";
 import { badgePop } from "../utils/motionVariants";
 import * as LucideIcons from "lucide-react";
@@ -11,21 +11,44 @@ function CertIcon({ iconName }) {
 }
 
 export default function Certifications() {
+  const sectionRef = useRef(null);
   const [activeCert, setActiveCert] = useState(null);
   const labelRef = useRef(null);
+  // Mount-delay skeleton: shows shape-matching card skeletons for ~200ms on mount
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setReady(true), 200);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Scroll-linked drift for ambient background glows
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"]
+  });
+
+  const glowTealX = useTransform(scrollYProgress, [0, 1], [-15, 20]);
+  const glowTealY = useTransform(scrollYProgress, [0, 1], [15, -20]);
 
   return (
     <section 
+      ref={sectionRef}
       id="certifications" 
-      className="py-24 md:py-36 border-t border-line bg-base-900/10 px-6 md:px-12 relative"
+      className="py-24 md:py-36 border-t border-line bg-base-900/10 px-6 md:px-12 relative overflow-hidden"
     >
-      <div className="max-w-7xl mx-auto">
+      {/* Ambient background glow: soft teal centered behind cards */}
+      <motion.div 
+        style={{ x: glowTealX, y: glowTealY }}
+        className="glow-ambient glow-teal absolute left-1/3 top-10 w-[550px] h-[550px] opacity-100"
+      />
+
+      <div className="max-w-7xl mx-auto relative z-10">
         
         {/* Eyebrow: Styled as a thin rounded pill with a soft blue border and subtle inner glow */}
         <div ref={labelRef} className="mb-8 block h-fit w-fit">
           <span className="inline-flex items-center px-4 py-1.5 rounded-full border border-accent-blue/30 bg-accent-blue/5 shadow-[inset_0_1px_12px_rgba(59,130,246,0.15)] backdrop-blur-sm">
             <TypewriterLabel 
-              text="04 // CERTIFICATIONS" 
+              text="05 // CERTIFICATIONS" 
               className="font-sans text-[10px] tracking-widest font-bold text-accent-blue uppercase" 
             />
           </span>
@@ -39,8 +62,28 @@ export default function Certifications() {
           ]} />
         </h2>
 
-        {/* Staggered Badge Trading Card Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        {/* Staggered Badge Trading Card Grid — skeleton while !ready */}
+        {!ready ? (
+          /* Shape-matching skeleton: same 3-col grid, same 280px card height */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {certifications.map((cert) => (
+              <div
+                key={cert.id}
+                className="relative w-full h-[280px] bg-base-900 border border-line rounded-2xl overflow-hidden"
+              >
+                <div className="skeleton-shimmer absolute inset-0" />
+                {/* Badge circle placeholder */}
+                <div className="absolute top-6 left-1/2 -translate-x-1/2 w-14 h-14 skeleton-shimmer rounded-full" />
+                {/* Title placeholder */}
+                <div className="absolute top-28 left-1/2 -translate-x-1/2 w-32 h-3 skeleton-shimmer rounded-full" />
+                <div className="absolute top-36 left-1/2 -translate-x-1/2 w-20 h-2.5 skeleton-shimmer rounded-full" />
+                {/* Badge pill placeholder */}
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-28 h-6 skeleton-shimmer rounded-full" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {certifications.map((cert, index) => (
             <motion.div
               key={cert.id}
@@ -132,7 +175,8 @@ export default function Certifications() {
               </div>
             </motion.div>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* Modal/Lightbox for Certificate Images */}
         <AnimatePresence>

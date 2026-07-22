@@ -1,12 +1,12 @@
 import { useEffect, useState, useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import { fadeUp, staggerContainer, blurReveal } from "../utils/motionVariants";
 import { LineReveal, TypewriterLabel } from "./TextReveal";
 
 function StatCounter({ value, duration = 1.5, suffix = "", onComplete }) {
-  const [count, setCount] = useState(0);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: false, margin: "-100px" });
+  const [count, setCount] = useState(0);
 
   useEffect(() => {
     if (!isInView) return;
@@ -59,6 +59,7 @@ function StatCounter({ value, duration = 1.5, suffix = "", onComplete }) {
 }
 
 export default function About() {
+  const sectionRef = useRef(null);
   const labelRef = useRef(null);
 
   // States to trigger card scale-pulse on counter completion
@@ -73,12 +74,34 @@ export default function About() {
     setCompleted(prev => ({ ...prev, [key]: true }));
   };
 
+  // Scroll-linked drift for ambient background glows
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"]
+  });
+
+  const glow1X = useTransform(scrollYProgress, [0, 1], [-20, 20]);
+  const glow1Y = useTransform(scrollYProgress, [0, 1], [-15, 20]);
+  const glow2X = useTransform(scrollYProgress, [0, 1], [20, -20]);
+  const glow2Y = useTransform(scrollYProgress, [0, 1], [15, -20]);
+
   return (
     <section 
+      ref={sectionRef}
       id="about" 
-      className="py-24 md:py-36 border-t border-line bg-base-950 px-6 md:px-12 relative"
+      className="py-24 md:py-36 border-t border-line bg-base-950 px-6 md:px-12 relative overflow-hidden"
     >
-      <div className="max-w-7xl mx-auto">
+      {/* Ambient background glows: dual violet (upper-left) and amber (lower-right) */}
+      <motion.div 
+        style={{ x: glow1X, y: glow1Y }}
+        className="glow-ambient glow-violet absolute -left-20 -top-20 w-96 h-96 opacity-100"
+      />
+      <motion.div 
+        style={{ x: glow2X, y: glow2Y }}
+        className="glow-ambient glow-amber absolute -right-20 -bottom-20 w-96 h-96 opacity-100"
+      />
+
+      <div className="max-w-7xl mx-auto relative z-10">
         
         {/* Eyebrow: Styled as a thin rounded pill with a soft blue border and subtle inner glow */}
         <div ref={labelRef} className="mb-8 block h-fit w-fit">
@@ -197,7 +220,7 @@ export default function About() {
             >
               <div className="font-sans text-[10px] tracking-widest font-bold text-ink-400 group-hover:text-accent-blue transition-colors">ACADEMIC CGPA</div>
               <div className="font-display font-extrabold text-4xl md:text-6xl bg-gradient-to-r from-accent-blue to-accent-cyan bg-clip-text text-transparent mt-2 select-none">
-                <StatCounter value="7.99" onComplete={() => triggerPulse("cgpa")} />
+                <StatCounter value="8.0" onComplete={() => triggerPulse("cgpa")} />
               </div>
               <p className="text-xs text-ink-400 mt-2 leading-tight">Graduated CS engineering first division</p>
             </motion.div>

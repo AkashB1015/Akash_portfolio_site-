@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { motion } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { skillCategories } from "../data/skills";
 import { fadeUp } from "../utils/motionVariants";
 import { LineReveal, TypewriterLabel } from "./TextReveal";
@@ -346,20 +346,59 @@ function SkillBrandIcon({ skillName, categoryId }) {
 }
 
 export default function Skills() {
+  const sectionRef = useRef(null);
   const labelRef = useRef(null);
+  // Mount-delay skeleton: shows shape-matching skeleton pills for ~200ms on mount,
+  // covering initial hydration lag. Real content resolves in place with no layout shift.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setReady(true), 200);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Scroll-linked drift for ambient background glows
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"]
+  });
+
+  const glowVioletX = useTransform(scrollYProgress, [0, 1], [-25, 25]);
+  const glowVioletY = useTransform(scrollYProgress, [0, 1], [-15, 25]);
+  const glowAmberX  = useTransform(scrollYProgress, [0, 1], [25, -25]);
+  const glowAmberY  = useTransform(scrollYProgress, [0, 1], [15, -25]);
+  const glowTealX   = useTransform(scrollYProgress, [0, 1], [-10, 15]);
+  const glowTealY   = useTransform(scrollYProgress, [0, 1], [20, -10]);
 
   return (
     <section 
+      ref={sectionRef}
       id="skills" 
-      className="py-24 md:py-36 border-t border-line bg-base-900/10 px-6 md:px-12 grid-bg relative"
+      className="py-24 md:py-36 border-t border-line bg-base-900/10 px-6 md:px-12 grid-bg relative overflow-hidden"
     >
-      <div className="max-w-7xl mx-auto">
+      {/* Ambient background glows: three colors at very low opacity to feel atmospheric */}
+      {/* Violet (Java side - left) */}
+      <motion.div 
+        style={{ x: glowVioletX, y: glowVioletY }}
+        className="glow-ambient glow-violet absolute -left-20 top-10 w-96 h-96 opacity-100"
+      />
+      {/* Amber (.NET side - right) */}
+      <motion.div 
+        style={{ x: glowAmberX, y: glowAmberY }}
+        className="glow-ambient glow-amber absolute -right-20 top-20 w-96 h-96 opacity-100"
+      />
+      {/* Teal (Shared/Tools/Cloud - center-bottom) */}
+      <motion.div 
+        style={{ x: glowTealX, y: glowTealY }}
+        className="glow-ambient glow-teal absolute left-1/3 -bottom-24 w-[450px] h-[450px] opacity-100"
+      />
+
+      <div className="max-w-7xl mx-auto relative z-10">
         
         {/* Eyebrow: Styled as a thin rounded pill with a soft blue border and subtle inner glow */}
         <div ref={labelRef} className="mb-8 block h-fit w-fit">
           <span className="inline-flex items-center px-4 py-1.5 rounded-full border border-accent-blue/30 bg-accent-blue/5 shadow-[inset_0_1px_12px_rgba(59,130,246,0.15)] backdrop-blur-sm">
             <TypewriterLabel 
-              text="02 // SKILLS & STACK" 
+              text="04 // SKILLS & STACK" 
               className="font-sans text-[10px] tracking-widest font-bold text-accent-blue uppercase" 
             />
           </span>
@@ -373,81 +412,106 @@ export default function Skills() {
           ]} />
         </h2>
 
-        {/* Categories Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {skillCategories.map((category) => (
-            <motion.div
-              key={category.id}
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: false, margin: "-100px" }}
-              className="p-6 md:p-8 bg-base-900 border border-line flex flex-col justify-start rounded-2xl hover:border-accent-blue/50 shadow-[0_8px_30px_rgba(59,130,246,0.02)] hover:shadow-[0_12px_36px_rgba(59,130,246,0.1)] hover:-translate-y-1 transition-all duration-300 relative group"
-            >
-              {/* Subtle top edge blue-cyan gradient strip highlight on card hover */}
-              <div className="absolute top-0 left-0 w-0 h-[2px] bg-gradient-to-r from-accent-blue to-accent-cyan group-hover:w-full transition-all duration-500 rounded-t-2xl" />
-              
-              {/* Category Title */}
-              <h3 className="font-sans text-[10px] tracking-widest text-accent-cyan uppercase mb-6 font-extrabold select-none">
-                {category.title}
-              </h3>
-
-              {/* Tag Grid / Flex Container */}
+        {/* Categories Grid — skeleton while !ready, real content once mounted */}
+        {!ready ? (
+          /* Shape-matching skeleton: same 3-col grid, same card count, shimmer pills */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {skillCategories.map((category) => (
+              <div
+                key={category.id}
+                className="p-6 md:p-8 bg-base-900 border border-line flex flex-col justify-start rounded-2xl"
+              >
+                {/* Category title skeleton */}
+                <div className="skeleton-shimmer h-3 w-28 rounded-full mb-6" />
+                {/* Pill skeletons — same count as real skills */}
+                <div className="flex flex-wrap gap-2.5">
+                  {category.skills.map((_, i) => (
+                    <div
+                      key={i}
+                      className="skeleton-shimmer h-7 rounded-full"
+                      style={{ width: `${60 + (i % 3) * 20}px` }}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {skillCategories.map((category) => (
               <motion.div
-                variants={containerVariants}
+                key={category.id}
+                variants={fadeUp}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: false, margin: "-100px" }}
-                className="w-full"
+                className="p-6 md:p-8 bg-base-900 border border-line flex flex-col justify-start rounded-2xl hover:border-accent-blue/50 shadow-[0_8px_30px_rgba(59,130,246,0.02)] hover:shadow-[0_12px_36px_rgba(59,130,246,0.1)] hover:-translate-y-1 transition-all duration-300 relative group"
               >
-                {category.id === "languages" ? (
-                  /* Custom 2-Column symmetric layout for programming languages using vector logo cards. */
-                  <div className="grid grid-cols-2 gap-3 w-full">
-                    {category.skills.map((skill, index) => {
-                      const theme = getLanguageTheme(skill);
-                      return (
-                        <motion.div
+                {/* Subtle top edge blue-cyan gradient strip highlight on card hover */}
+                <div className="absolute top-0 left-0 w-0 h-[2px] bg-gradient-to-r from-accent-blue to-accent-cyan group-hover:w-full transition-all duration-500 rounded-t-2xl" />
+                
+                {/* Category Title */}
+                <h3 className="font-sans text-[10px] tracking-widest text-accent-cyan uppercase mb-6 font-extrabold select-none">
+                  {category.title}
+                </h3>
+
+                {/* Tag Grid / Flex Container */}
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: false, margin: "-100px" }}
+                  className="w-full"
+                >
+                  {category.id === "languages" ? (
+                    /* Custom 2-Column symmetric layout for programming languages using vector logo cards. */
+                    <div className="grid grid-cols-2 gap-3 w-full">
+                      {category.skills.map((skill, index) => {
+                        const theme = getLanguageTheme(skill);
+                        return (
+                          <motion.div
+                            key={index}
+                            variants={chipVariants}
+                            custom={index}
+                            whileHover={{ 
+                              y: -4,
+                              boxShadow: `0 4px 18px ${theme.shadow}`
+                            }}
+                            className={`flex flex-col items-center justify-center py-4 px-2 bg-base-950/60 border border-line rounded-xl ${theme.border} transition-all duration-350 group/chip cursor-pointer select-none shadow-sm`}
+                          >
+                            <LanguageIcon name={skill} />
+                            <span className={`text-[10px] font-sans font-bold text-ink-400 ${theme.text} mt-2.5 tracking-wider transition-colors duration-300`}>
+                              {skill}
+                            </span>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    /* Standard chip elements with dynamic brand logo icons, falling back to clean category Lucide icons */
+                    <div className="flex flex-wrap gap-2.5">
+                      {category.skills.map((skill, index) => (
+                        <motion.span
                           key={index}
                           variants={chipVariants}
                           custom={index}
                           whileHover={{ 
-                            y: -4,
-                            boxShadow: `0 4px 18px ${theme.shadow}`
+                            y: -2.5,
+                            boxShadow: "0 4px 12px rgba(59, 130, 246, 0.15)"
                           }}
-                          className={`flex flex-col items-center justify-center py-4 px-2 bg-base-950/60 border border-line rounded-xl ${theme.border} transition-all duration-350 group/chip cursor-pointer select-none shadow-sm`}
+                          className="flex items-center px-3 py-1.5 bg-base-950/60 border border-line text-ink-100 font-sans font-bold text-xs tracking-wider rounded-full hover:border-accent-blue/60 hover:text-accent-blue hover:bg-gradient-to-br hover:from-accent-blue/[0.04] hover:to-transparent transition-all duration-350 group/chip cursor-pointer select-none shadow-sm"
                         >
-                          <LanguageIcon name={skill} />
-                          <span className={`text-[10px] font-sans font-bold text-ink-400 ${theme.text} mt-2.5 tracking-wider transition-colors duration-300`}>
-                            {skill}
-                          </span>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  /* Standard chip elements with dynamic brand logo icons, falling back to clean category Lucide icons */
-                  <div className="flex flex-wrap gap-2.5">
-                    {category.skills.map((skill, index) => (
-                      <motion.span
-                        key={index}
-                        variants={chipVariants}
-                        custom={index}
-                        whileHover={{ 
-                          y: -2.5,
-                          boxShadow: "0 4px 12px rgba(59, 130, 246, 0.15)"
-                        }}
-                        className="flex items-center px-3 py-1.5 bg-base-950/60 border border-line text-ink-100 font-sans font-bold text-xs tracking-wider rounded-full hover:border-accent-blue/60 hover:text-accent-blue hover:bg-gradient-to-br hover:from-accent-blue/[0.04] hover:to-transparent transition-all duration-350 group/chip cursor-pointer select-none shadow-sm"
-                      >
-                        <SkillBrandIcon skillName={skill} categoryId={category.id} />
-                        <span>{skill}</span>
-                      </motion.span>
-                    ))}
-                  </div>
-                )}
+                          <SkillBrandIcon skillName={skill} categoryId={category.id} />
+                          <span>{skill}</span>
+                        </motion.span>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
               </motion.div>
-            </motion.div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
