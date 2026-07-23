@@ -568,3 +568,77 @@ html.dark .glow-amber,
 html.dark .glow-teal {
   mix-blend-mode: screen;
 }
+
+/* ─── Certification Card — one-shot diagonal shine sweep ─── */
+@keyframes certShineSweep {
+  0% {
+    transform: translateX(-150%) skewX(-15deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(350%) skewX(-15deg);
+    opacity: 0;
+  }
+}
+
+/* The shine element itself — positioned absolute inside the card */
+.cert-shine-sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.cert-shine-sweep::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: 0;
+  width: 40%;
+  height: 140%;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.06) 50%,
+    transparent 80%
+  );
+  /* Run once on mount — React remounts this element each hover-enter */
+  animation: certShineSweep 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Touch-device tap state — brief scale + glow instead of hover lift */
+@media (hover: none) or (pointer: coarse) {
+  .cert-card-outer:active .cert-card-front {
+    transform: scale(0.97);
+    border-color: rgba(20, 184, 166, 0.4) !important;
+    box-shadow: 0 4px 20px rgba(20, 184, 166, 0.12) !important;
+    transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease !important;
+  }
+}
+
+/* ─── Copy protection — selectable overrides ───────────────────────────────── */
+/* The body gets user-select:none via JS. These rules restore selection where
+   it is legitimately needed: Contact info fields and all form inputs. */
+
+/* Email and phone in the Contact section remain fully selectable */
+#contact .font-mono,
+#contact a[href^="tel"],
+#contact a[href^="mailto"] {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+/* All form fields site-wide remain fully functional */
+input, textarea, select, [contenteditable] {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+

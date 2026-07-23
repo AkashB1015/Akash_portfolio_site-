@@ -46,30 +46,28 @@ export default function CustomCursor() {
     document.addEventListener("mouseleave", handleMouseLeave);
     document.addEventListener("mouseenter", handleMouseEnter);
 
-    const addHoverListeners = () => {
-      const hoverables = document.querySelectorAll(
-        'a, button, [role="button"], input, select, textarea, .project-card, .cert-card, .clickable'
-      );
-      hoverables.forEach((el) => {
-        el.addEventListener("mouseenter", () => setIsHovered(true));
-        el.addEventListener("mouseleave", () => setIsHovered(false));
-      });
+    // Event delegation — one listener pair on document instead of N listeners
+    // on every interactive element. No MutationObserver, no querySelectorAll.
+    const HOVERABLE = 'a, button, [role="button"], input, select, textarea, .project-card, .cert-card, .clickable';
+    const handleMouseOver = (e) => {
+      if (e.target.closest(HOVERABLE)) setIsHovered(true);
     };
-
-    addHoverListeners();
-
-    // Re-bind hoverables if DOM updates dynamically
-    const observer = new MutationObserver(addHoverListeners);
-    observer.observe(document.body, { childList: true, subtree: true });
+    const handleMouseOut = (e) => {
+      if (e.target.closest(HOVERABLE)) setIsHovered(false);
+    };
+    document.addEventListener("mouseover", handleMouseOver);
+    document.addEventListener("mouseout", handleMouseOut);
 
     return () => {
       window.removeEventListener("resize", checkDevice);
       window.removeEventListener("mousemove", moveCursor);
       document.removeEventListener("mouseleave", handleMouseLeave);
       document.removeEventListener("mouseenter", handleMouseEnter);
-      observer.disconnect();
+      document.removeEventListener("mouseover", handleMouseOver);
+      document.removeEventListener("mouseout", handleMouseOut);
     };
   }, [isMobile, isVisible, prefersReducedMotion]);
+
 
   if (isMobile || prefersReducedMotion || !isVisible) return null;
 

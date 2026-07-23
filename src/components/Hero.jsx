@@ -30,6 +30,17 @@ export default function Hero() {
   const { scrollY } = useScroll();
   const [isMobileScreen, setIsMobileScreen] = useState(false);
 
+  // Signal preloader that Hero has mounted and is ready to be shown
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.__heroMounted = true;
+      // Resolve the promise-based gate if the preloader is waiting on it
+      if (typeof window.__heroMountedResolve === "function") {
+        window.__heroMountedResolve();
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const checkScreen = () => {
       setIsMobileScreen(window.innerWidth < 1024);
@@ -145,8 +156,8 @@ export default function Hero() {
             </motion.div>
           </div>
 
-          {/* Right Column: Draggable 3D Tech Skill Orbiting Sphere */}
-          <div className="lg:col-span-5 flex justify-center lg:justify-center">
+          {/* Right Column: Draggable 3D Tech Skill Orbiting Sphere — desktop only */}
+          <div className="hidden lg:flex lg:col-span-5 justify-center">
             <TechOrbitSphere />
           </div>
         </div>

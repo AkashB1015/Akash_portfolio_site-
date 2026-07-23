@@ -43,46 +43,50 @@ export default function Navbar() {
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
-
-      // Force active section to contact if scrolled to the bottom of the page
       const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
-      if (isAtBottom) {
-        setActiveSection("contact");
-      }
+      if (isAtBottom) setActiveSection("contact");
     };
-
     window.addEventListener("scroll", handleScroll);
 
-    // Scroll spy using Intersection Observer
+    // Scroll spy — observe sections as they mount (lazy sections arrive after initial render)
     const observerOptions = {
       root: null,
       rootMargin: "-30% 0px -50% 0px",
       threshold: 0
     };
-
     const observerCallback = (entries) => {
       const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
-      if (isAtBottom) {
-        setActiveSection("contact");
-        return;
-      }
-
+      if (isAtBottom) { setActiveSection("contact"); return; }
       entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setActiveSection(entry.target.id);
+        if (entry.isIntersecting) setActiveSection(entry.target.id);
+      });
+    };
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    const observeKnownSections = () => {
+      NAV_ITEMS.forEach((item) => {
+        const el = document.getElementById(item.target);
+        if (el && !el.dataset.observed) {
+          observer.observe(el);
+          el.dataset.observed = "1";
         }
       });
     };
 
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
-    NAV_ITEMS.forEach((item) => {
-      const el = document.getElementById(item.target);
-      if (el) observer.observe(el);
+    // Observe any already-mounted sections immediately
+    observeKnownSections();
+
+    // Watch for lazy sections arriving in the DOM
+    const mutationObserver = new MutationObserver(observeKnownSections);
+    mutationObserver.observe(document.getElementById("root") || document.body, {
+      childList: true,
+      subtree: true,
     });
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
       observer.disconnect();
+      mutationObserver.disconnect();
     };
   }, []);
 
@@ -90,19 +94,36 @@ export default function Navbar() {
     e.preventDefault();
     setMobileMenuOpen(false);
 
-    const element = document.getElementById(targetId);
-    if (element) {
+    const scrollToTarget = (el) => {
       const offset = 80;
       const bodyRect = document.body.getBoundingClientRect().top;
-      const elementRect = element.getBoundingClientRect().top;
+      const elementRect = el.getBoundingClientRect().top;
       const elementPosition = elementRect - bodyRect;
       const offsetPosition = elementPosition - offset;
+      window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+    };
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth"
-      });
+    const element = document.getElementById(targetId);
+    if (element) {
+      scrollToTarget(element);
+      return;
     }
+
+    // Section not in DOM yet — lazy chunk still loading.
+    // Poll until it appears (max 3 seconds) then scroll.
+    let attempts = 0;
+    const poll = setInterval(() => {
+      attempts++;
+      const el = document.getElementById(targetId);
+      if (el) {
+        clearInterval(poll);
+        scrollToTarget(el);
+      } else if (attempts > 30) {
+        // Give up after 3s — fall back to hash navigation
+        clearInterval(poll);
+        window.location.hash = targetId;
+      }
+    }, 100);
   };
 
   const toggleTheme = () => {

@@ -1,19 +1,21 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { motion, useScroll, useSpring, useTransform } from "framer-motion";
-import Lenis from "lenis";
 
-// Import Components
+// Import Components — critical above-fold (synchronous, in initial bundle)
 import Navbar from "./components/Navbar";
 import CustomCursor from "./components/CustomCursor";
 import Hero from "./components/Hero";
-import About from "./components/About";
-import Skills from "./components/Skills";
-import Projects from "./components/Projects";
-import Certifications from "./components/Certifications";
-import Education from "./components/Education";
-import Contact from "./components/Contact";
-import ChatWidget from "./components/ChatWidget";
 import Preloader from "./components/Preloader";
+
+// Below-fold sections — lazy loaded (split into separate chunks, fetched after first paint)
+const About = lazy(() => import("./components/About"));
+const Education = lazy(() => import("./components/Education"));
+const Projects = lazy(() => import("./components/Projects"));
+const Skills = lazy(() => import("./components/Skills"));
+const Certifications = lazy(() => import("./components/Certifications"));
+const Contact = lazy(() => import("./components/Contact"));
+const ChatWidget = lazy(() => import("./components/ChatWidget"));
+// Lenis is imported dynamically inside useEffect to keep it out of the initial bundle
 
 const NAV_ITEMS = [
   { label: "HOME", target: "hero" },
@@ -29,8 +31,50 @@ export default function App() {
   const [activeSection, setActiveSection] = useState("hero");
   const [showChatbot] = useState(true);
 
+  // ── Scoped copy protection ──────────────────────────────────────────────────
+  // Prevents casual text selection/copy across the site while keeping the
+  // Contact section's email/phone fully selectable and all form fields usable.
+  useEffect(() => {
+    // 1. CSS-level: apply user-select:none to body; Contact section overrides it
+    document.body.style.userSelect = "none";
+    document.body.style.webkitUserSelect = "none";
 
-  // Track active section for side dots progress navigation
+    // 2. Right-click context menu — suppressed everywhere except Contact details
+    const handleContextMenu = (e) => {
+      const inContact = e.target.closest("#contact");
+      if (!inContact) e.preventDefault();
+    };
+
+    // 3. Keyboard shortcut intercepts — skip when focus is inside a form field
+    const FORM_TAGS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
+    const handleKeyDown = (e) => {
+      const tag = document.activeElement?.tagName;
+      // Never block inside form fields (chatbot input, etc.)
+      if (FORM_TAGS.has(tag)) return;
+
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (!ctrl) return;
+
+      const key = e.key.toLowerCase();
+      // Block: Ctrl+C (copy), Ctrl+A (select-all), Ctrl+U (view-source)
+      if (key === "c" || key === "a" || key === "u") {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.userSelect = "";
+      document.body.style.webkitUserSelect = "";
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  // ── Track active section for side dots progress navigation ─────────────────
+
   useEffect(() => {
     const sections = ["hero", "about", "education", "projects", "skills", "certifications", "contact"];
     const handleScroll = () => {
@@ -51,49 +95,69 @@ export default function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Initialize Lenis smooth scroll on mount
+  // Initialize Lenis smooth scroll — deferred until after first paint
+  // Dynamic import keeps Lenis out of the initial JS bundle entirely
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.0, // slightly swifter for more responsive scrolling
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // smooth exponential ease-out
-      orientation: "vertical",
-      gestureOrientation: "vertical",
-      smoothWheel: true,
-      wheelMultiplier: 0.9,
-      touchMultiplier: 1.5,
-      infinite: false,
-    });
+    let lenis;
+    let rafId;
 
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
+    const initLenis = async () => {
+      const { default: Lenis } = await import("lenis");
+      lenis = new Lenis({
+        duration: 1.0,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        orientation: "vertical",
+        gestureOrientation: "vertical",
+        smoothWheel: true,
+        wheelMultiplier: 0.9,
+        touchMultiplier: 1.5,
+        infinite: false,
+      });
 
-    requestAnimationFrame(raf);
-
-    // Synchronize Lenis scrolling state with scroll-to-hash overrides
-    const handleAnchorClick = (e) => {
-      const href = e.target.closest("a")?.getAttribute("href");
-      if (href && href.startsWith("#")) {
-        e.preventDefault();
-        const targetId = href.replace("#", "");
-        const targetEl = document.getElementById(targetId);
-        if (targetEl) {
-          lenis.scrollTo(targetEl, {
-            offset: targetId === "hero" ? 0 : -80,
-            duration: 1.2,
-          });
-        }
+      function raf(time) {
+        lenis.raf(time);
+        rafId = requestAnimationFrame(raf);
       }
+      rafId = requestAnimationFrame(raf);
+
+      // Synchronize Lenis scrolling state with scroll-to-hash overrides
+      const handleAnchorClick = (e) => {
+        const href = e.target.closest("a")?.getAttribute("href");
+        if (href && href.startsWith("#")) {
+          e.preventDefault();
+          const targetId = href.replace("#", "");
+          const targetEl = document.getElementById(targetId);
+          if (targetEl) {
+            lenis.scrollTo(targetEl, {
+              offset: targetId === "hero" ? 0 : -80,
+              duration: 1.2,
+            });
+          }
+        }
+      };
+      document.addEventListener("click", handleAnchorClick);
+      // Store cleanup ref on lenis instance for teardown
+      lenis.__clickCleanup = () => document.removeEventListener("click", handleAnchorClick);
     };
 
-    document.addEventListener("click", handleAnchorClick);
-
-    return () => {
-      lenis.destroy();
-      document.removeEventListener("click", handleAnchorClick);
-    };
+    // requestIdleCallback defers until after first paint; setTimeout fallback for Safari
+    if (typeof requestIdleCallback !== "undefined") {
+      const id = requestIdleCallback(() => initLenis(), { timeout: 2000 });
+      return () => {
+        cancelIdleCallback(id);
+        if (lenis) { lenis.__clickCleanup?.(); lenis.destroy(); }
+        if (rafId) cancelAnimationFrame(rafId);
+      };
+    } else {
+      const id = setTimeout(() => initLenis(), 200);
+      return () => {
+        clearTimeout(id);
+        if (lenis) { lenis.__clickCleanup?.(); lenis.destroy(); }
+        if (rafId) cancelAnimationFrame(rafId);
+      };
+    }
   }, []);
+
 
   // Framer Motion scroll progress bar hook
   const { scrollY, scrollYProgress } = useScroll();
@@ -252,14 +316,20 @@ export default function App() {
                 href={`#${item.target}`}
                 onClick={(e) => {
                   e.preventDefault();
-                  const el = document.getElementById(item.target);
-                  if (el) {
+                  const scrollToEl = (el) => {
                     const offset = item.target === "hero" ? 0 : 80;
-                    window.scrollTo({
-                      top: el.offsetTop - offset,
-                      behavior: "smooth"
-                    });
-                  }
+                    window.scrollTo({ top: el.offsetTop - offset, behavior: "smooth" });
+                  };
+                  const el = document.getElementById(item.target);
+                  if (el) { scrollToEl(el); return; }
+                  // Lazy section not yet in DOM — poll until mounted
+                  let tries = 0;
+                  const poll = setInterval(() => {
+                    tries++;
+                    const found = document.getElementById(item.target);
+                    if (found) { clearInterval(poll); scrollToEl(found); }
+                    else if (tries > 30) { clearInterval(poll); window.location.hash = item.target; }
+                  }, 100);
                 }}
                 className="relative flex items-center justify-center w-11 h-11 group cursor-pointer"
                 style={{ height: 44, width: 44 }} // 44x44 tap target size
@@ -333,30 +403,37 @@ export default function App() {
 
       {/* Main Layout Wrap */}
       <main className="w-full min-h-screen bg-transparent text-ink-100 flex flex-col relative z-10">
-        {/* Hero Section */}
+        {/* Hero Section — synchronous, above fold, in initial bundle */}
         <Hero />
 
-        {/* Section 01: About */}
-        <About />
+        {/* Below-fold sections — each lazy-loaded, renders when chunk arrives */}
+        <Suspense fallback={null}>
+          {/* Section 01: About */}
+          <About />
 
-        {/* Section 02: Education */}
-        <Education />
+          {/* Section 02: Education */}
+          <Education />
 
-        {/* Section 03: Projects */}
-        <Projects />
+          {/* Section 03: Projects */}
+          <Projects />
 
-        {/* Section 04: Skills */}
-        <Skills />
+          {/* Section 04: Skills */}
+          <Skills />
 
-        {/* Section 05: Certifications */}
-        <Certifications />
+          {/* Section 05: Certifications */}
+          <Certifications />
 
-        {/* Section 06: Contact & Footer */}
-        <Contact />
+          {/* Section 06: Contact & Footer */}
+          <Contact />
+        </Suspense>
       </main>
 
-      {/* Chatbot Floating Widget */}
-      {showChatbot && <ChatWidget />}
+      {/* Chatbot Floating Widget — lazy, loads after everything else */}
+      {showChatbot && (
+        <Suspense fallback={null}>
+          <ChatWidget />
+        </Suspense>
+      )}
     </>
   );
 }

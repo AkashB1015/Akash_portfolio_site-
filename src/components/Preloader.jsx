@@ -57,15 +57,41 @@ export default function Preloader() {
     setIsMobile(window.innerWidth < 768 || "ontouchstart" in window);
   }, []);
 
-  // Progress rAF loop
+  // Progress rAF loop + real readiness gate
   useEffect(() => {
     if (!visible) return;
 
     startRef.current = performance.now();
 
+    // ── Real readiness promise: resolves when Hero has mounted ──
+    // We create a promise that the Hero component can resolve via
+    // window.__heroMountedResolve(). If Hero already mounted (warm reload
+    // path where preloader is skipped), this resolves immediately.
+    const heroReadyPromise = new Promise((resolve) => {
+      if (window.__heroMounted) {
+        resolve();
+      } else {
+        window.__heroMountedResolve = resolve;
+        // Safety fallback — if Hero never signals in 5s, release anyway
+        setTimeout(resolve, 5000);
+      }
+    });
+
+    // ── Fonts ready promise ──
+    const fontsReadyPromise = document.fonts
+      ? document.fonts.ready.catch(() => Promise.resolve())
+      : Promise.resolve();
+
+    // ── Minimum duration promise (floor, not ceiling) ──
+    let minDurationResolve;
+    const minDurationPromise = new Promise((resolve) => {
+      minDurationResolve = resolve;
+    });
+
+    let exitScheduled = false;
+
     const tick = (now) => {
       const elapsed = now - startRef.current;
-      // Ease: slightly faster start, gentle settle near 100%
       const linearPct = Math.min(1, elapsed / MIN_DURATION);
       const easedPct = 1 - Math.pow(1 - linearPct, 2.2);
       const pct = easedPct * 100;
@@ -75,16 +101,38 @@ export default function Preloader() {
       if (pct < 100) {
         rafRef.current = requestAnimationFrame(tick);
       } else {
-        // Hit 100 — converge for 200ms, then exit
-        setPhase("converging");
-        setTimeout(() => setPhase("exiting"), 200);
-        setTimeout(() => setVisible(false), 800); // wipe + fade combined = ~750ms
+        // Visual bar hit 100 — resolve the minimum duration gate
+        if (!exitScheduled) {
+          exitScheduled = true;
+          setPhase("converging");
+          minDurationResolve();
+
+          // Wait for ALL real readiness signals before exiting
+          Promise.all([
+            minDurationPromise,
+            fontsReadyPromise,
+            heroReadyPromise,
+            // Extra 200ms convergence visual hold
+            new Promise((r) => setTimeout(r, 200)),
+          ]).then(() => {
+            setPhase("exiting");
+            // wipe + fade combined = ~750ms
+            setTimeout(() => setVisible(false), 800);
+          });
+        }
       }
     };
 
     rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      // Clean up the hero mount resolver so it doesn't linger
+      if (window.__heroMountedResolve) {
+        delete window.__heroMountedResolve;
+      }
+    };
   }, [visible]);
+
 
   // Cursor parallax (desktop only)
   const handleMouseMove = useCallback(
