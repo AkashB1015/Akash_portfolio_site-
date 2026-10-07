@@ -4,7 +4,7 @@ import { useReducedMotion } from "framer-motion";
 const RADIUS = 54;
 const STROKE_WIDTH = 4;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-const MIN_DURATION = 1200; // ms — minimum preloader duration
+const MIN_DURATION = 750; // ms — normally increased preloader speed
 
 const STATUS_LABELS = [
   { threshold: 0, label: "Compiling..." },
@@ -64,16 +64,12 @@ export default function Preloader() {
     startRef.current = performance.now();
 
     // ── Real readiness promise: resolves when Hero has mounted ──
-    // We create a promise that the Hero component can resolve via
-    // window.__heroMountedResolve(). If Hero already mounted (warm reload
-    // path where preloader is skipped), this resolves immediately.
     const heroReadyPromise = new Promise((resolve) => {
       if (window.__heroMounted) {
         resolve();
       } else {
         window.__heroMountedResolve = resolve;
-        // Safety fallback — if Hero never signals in 5s, release anyway
-        setTimeout(resolve, 5000);
+        setTimeout(resolve, 3000);
       }
     });
 
@@ -81,12 +77,6 @@ export default function Preloader() {
     const fontsReadyPromise = document.fonts
       ? document.fonts.ready.catch(() => Promise.resolve())
       : Promise.resolve();
-
-    // ── Minimum duration promise (floor, not ceiling) ──
-    let minDurationResolve;
-    const minDurationPromise = new Promise((resolve) => {
-      minDurationResolve = resolve;
-    });
 
     let exitScheduled = false;
 
@@ -101,23 +91,19 @@ export default function Preloader() {
       if (pct < 100) {
         rafRef.current = requestAnimationFrame(tick);
       } else {
-        // Visual bar hit 100 — resolve the minimum duration gate
+        // Visual bar hit 100
         if (!exitScheduled) {
           exitScheduled = true;
           setPhase("converging");
-          minDurationResolve();
 
-          // Wait for ALL real readiness signals before exiting
+          // Wait for readiness signals before exiting
           Promise.all([
-            minDurationPromise,
             fontsReadyPromise,
             heroReadyPromise,
-            // Extra 200ms convergence visual hold
-            new Promise((r) => setTimeout(r, 200)),
+            new Promise((r) => setTimeout(r, 120)),
           ]).then(() => {
             setPhase("exiting");
-            // wipe + fade combined = ~750ms
-            setTimeout(() => setVisible(false), 800);
+            setTimeout(() => setVisible(false), 500);
           });
         }
       }
@@ -126,7 +112,6 @@ export default function Preloader() {
     rafRef.current = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(rafRef.current);
-      // Clean up the hero mount resolver so it doesn't linger
       if (window.__heroMountedResolve) {
         delete window.__heroMountedResolve;
       }

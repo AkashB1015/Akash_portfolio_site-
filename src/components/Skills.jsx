@@ -373,7 +373,7 @@ export default function Skills() {
     <section 
       ref={sectionRef}
       id="skills" 
-      className="py-24 md:py-36 border-t border-line bg-base-900/10 px-6 md:px-12 grid-bg relative overflow-hidden"
+      className="py-16 md:py-24 border-t border-line bg-base-900/10 px-6 md:px-12 grid-bg relative overflow-hidden"
     >
       {/* Ambient background glows: three colors at very low opacity to feel atmospheric */}
       {/* Violet (Java side - left) */}

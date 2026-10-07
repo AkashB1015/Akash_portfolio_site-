@@ -5,7 +5,7 @@ import { LineReveal, TypewriterLabel } from "./TextReveal";
 
 function StatCounter({ value, duration = 1.5, suffix = "", onComplete }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, margin: "-100px" });
+  const isInView = useInView(ref, { once: false, margin: "0px" });
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function About() {
     <section 
       ref={sectionRef}
       id="about" 
-      className="py-24 md:py-36 border-t border-line bg-base-950 px-6 md:px-12 relative overflow-hidden"
+      className="py-16 md:py-24 border-t border-line bg-base-950 px-6 md:px-12 relative overflow-hidden"
     >
       {/* Ambient background glows: dual violet (upper-left) and amber (lower-right) */}
       <motion.div 
@@ -114,7 +114,7 @@ export default function About() {
         </div>
 
         {/* Section Heading: Curtain Line reveal */}
-        <h2 className="text-3xl md:text-5xl font-display font-extrabold text-ink-100 tracking-tight mb-16 max-w-3xl leading-tight">
+        <h2 className="text-3xl md:text-5xl font-display font-extrabold text-ink-100 tracking-tight mb-10 max-w-3xl leading-tight">
           <LineReveal lines={[
             "Architecting solutions at the",
             "intersection of security,",
@@ -130,7 +130,7 @@ export default function About() {
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: false, margin: "-100px" }}
+            viewport={{ once: false, margin: "0px" }}
             className="lg:col-span-7 space-y-6 text-ink-400 font-body font-light text-sm md:text-base leading-relaxed"
           >
             <motion.p variants={blurReveal}>
@@ -165,7 +165,7 @@ export default function About() {
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: false, margin: "-100px" }}
+            viewport={{ once: false, margin: "0px" }}
             className="lg:col-span-5 grid grid-cols-2 gap-4 md:gap-6 w-full"
           >
             {/* Stat 1: Projects */}

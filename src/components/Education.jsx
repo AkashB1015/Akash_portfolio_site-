@@ -439,7 +439,7 @@ export default function Education() {
     <section
       ref={sectionRef}
       id="education"
-      className="py-24 md:py-36 border-t border-line bg-base-950 px-6 md:px-12 relative overflow-hidden"
+      className="py-16 md:py-24 border-t border-line bg-base-950 px-6 md:px-12 relative overflow-hidden"
     >
       {/* Ambient glow: soft teal centered behind the timeline rail */}
       <motion.div

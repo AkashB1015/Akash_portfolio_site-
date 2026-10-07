@@ -27,9 +27,9 @@ export default {
           purple: '#8B5CF6',
         },
         // Chatbot theme tokens
-        'bg-base': '#080810',
-        'panel': '#0F1420',
-        'panel-border': '#1E2433',
+        'bg-base': '#080808',
+        'panel': '#0F0F0F',
+        'panel-border': '#1A1A1A',
         'accent-blue': '#3B82F6',
         'accent-cyan': '#38BDF8',
         'accent-purple': '#8B5CF6',

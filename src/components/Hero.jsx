@@ -71,7 +71,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative h-screen min-h-[620px] flex flex-col justify-between pt-16 md:pt-20 pb-28 md:pb-32 overflow-hidden grid-bg"
+      className="relative h-screen min-h-[620px] flex flex-col justify-between pt-16 md:pt-20 pb-28 md:pb-32 overflow-hidden bg-base-950 grid-bg"
     >
 
 
